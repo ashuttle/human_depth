@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: human_depth
+Description: Description of human_depth
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib -lhuman_pose_msgs
+Requires: 

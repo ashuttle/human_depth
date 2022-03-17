@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/xuchengjun/catkin_ws/src/human_depth/build/devel/setup.sh

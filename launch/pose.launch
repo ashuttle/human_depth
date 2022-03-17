@@ -1,0 +1,8 @@
+<launch>
+	<arg name="model" />
+	<arg name="gui" default="True" />
+	<arg name="rvizconfig" default="$(find human_depth)/rviz/human_pose.rviz" />
+	<node pkg="human_depth" type="human_depth_detected" name="human_depth" output="screen" />
+	<node name="rviz_human_cloud" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+</launch>
