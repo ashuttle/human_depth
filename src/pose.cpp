@@ -1,8 +1,15 @@
 #include "human_depth/pose.h"
 
 Pose::Pose(){
+
     pose_joints.resize(18);
-    //pose_joints_3d.resize(18);
+    // for(auto joint : pose_joints){
+    //     joint.x = 0.0;
+    //     joint.y = 0.0;
+    //     joint.z = 0.0;
+    //     joint.p = 0.0;
+    // }
+    // pose_joints_3d.resize(18);
     joint_name.resize(18);
     //setJointName();
 }
@@ -19,7 +26,7 @@ int Pose::getCameraId(){
 
 void Pose::setPose(const human_pose_msgs::HumanList& keypoints, int id)
 {
-    for(int i = 0; i <18; ++i) {
+    for(int i = 0; i < 18; ++i) {
         pose_joints[i].x = keypoints.human_list[id].body_key_points_prob[i].x;
         pose_joints[i].y = keypoints.human_list[id].body_key_points_prob[i].y;
         pose_joints[i].z = 0;

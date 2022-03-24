@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdlib.h>
 #include "human_depth/imageProcess.h"
 #include "human_depth/pose.h"
 
@@ -8,6 +9,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "human_depth");
 
     if(!ros::ok()){
+        system("pause");
         return 0;
     }
 
@@ -16,18 +18,12 @@ int main(int argc, char** argv)
     std::string topicDepth = K2_TOPIC_QHD K2_TOPIC_IMAGE_DEPTH K2_TOPIC_IMAGE_RECT;
     bool useExact = true;
     bool useCompressed = false;
-    ImageProcess::Mode mode = ImageProcess::CLOUD;
+    ImageProcess::Mode mode = ImageProcess::IMAGE;
 
     for(size_t i = 1; i < (size_t)argc; ++i)
     {
         std::string param(argv[i]);
 
-    // if(param == "-h" || param == "--help" || param == "-?" || param == "--?")
-    // {
-    //   help(argv[0]);
-    //   ros::shutdown();
-    //   return 0;
-    // }
      // 图像的清晰度 越高实时性越差
         if(param == "qhd")
         {
@@ -82,6 +78,7 @@ int main(int argc, char** argv)
     //topicDepth = "/" + ns + topicDepth;
 
     // 构建一个对象
+
     ImageProcess cam_a(1, topicColor, topicDepth, useExact, useCompressed);
 
     OUT_INFO("starting receiver...");
@@ -89,5 +86,6 @@ int main(int argc, char** argv)
     cam_a.run(mode);
     ros::spin();
     ros::shutdown();
+    // system("pause");
     return 0; 
 }

@@ -5,6 +5,7 @@ project(human_depth)
 add_compile_options(-std=c++14)
 
 SET(CMAKE_BUILD_TYPE "Debug")
+# SET(CMAKE_CXX_FLAGS "-g -Wall")
 #SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
 #SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 ## Find catkin macros and libraries
@@ -40,7 +41,7 @@ find_package(PCL 1.7 REQUIRED)
 #add_definitions(${PCL_DEFINITIONS})
 
 if(OPENMP_FOUND)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}-pthread ${OpenMP_CXX_FLAGS}")
 endif()
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

@@ -60,15 +60,15 @@ include CMakeFiles/camera_wrapper.dir/flags.make
 CMakeFiles/camera_wrapper.dir/src/calib.cpp.o: CMakeFiles/camera_wrapper.dir/flags.make
 CMakeFiles/camera_wrapper.dir/src/calib.cpp.o: ../src/calib.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/camera_wrapper.dir/src/calib.cpp.o"
-	/bin/x86_64-linux-gnu-g++-9  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/camera_wrapper.dir/src/calib.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp
+	/bin/x86_64-linux-gnu-g++-7  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/camera_wrapper.dir/src/calib.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp
 
 CMakeFiles/camera_wrapper.dir/src/calib.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/camera_wrapper.dir/src/calib.cpp.i"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp > CMakeFiles/camera_wrapper.dir/src/calib.cpp.i
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp > CMakeFiles/camera_wrapper.dir/src/calib.cpp.i
 
 CMakeFiles/camera_wrapper.dir/src/calib.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/camera_wrapper.dir/src/calib.cpp.s"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp -o CMakeFiles/camera_wrapper.dir/src/calib.cpp.s
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/calib.cpp -o CMakeFiles/camera_wrapper.dir/src/calib.cpp.s
 
 # Object files for target camera_wrapper
 camera_wrapper_OBJECTS = \

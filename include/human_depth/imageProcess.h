@@ -71,40 +71,38 @@ public:
                 const sensor_msgs::CameraInfo::ConstPtr cameraInfoColor, const sensor_msgs::CameraInfo::ConstPtr cameraInfoDepth
                 );
     void imageViewer();
-    void cloudViewer();
-    void createLookup(size_t width, size_t height);
-    void createCloud(const cv::Mat &depth, const cv::Mat &color, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud) const;
-    void createJointCloud(cv::Mat &depth, cv::Mat &color, KeyPoint_prob& joint, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
-    void createHumanCloud(cv::Mat& depth, cv::Mat &color, vector<Pose>& pose, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
-    void pubCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input)const;
-    void keyboardEvent(const pcl::visualization::KeyboardEvent &event, void *);
+    
+    // void keyboardEvent(const pcl::visualization::KeyboardEvent &event, void *);
     void readImage(const sensor_msgs::Image::ConstPtr msgImage, cv::Mat &image) const;
     void readCameraInfo(const sensor_msgs::CameraInfo::ConstPtr cameraInfo, cv::Mat &cameraMatrix) const;
     void dispDepthImage(cv::Mat& input, cv::Mat& output, const float maxValue);
     void getDepthValue(cv::Mat& image, KeyPoint_prob& joint);
 
 
-
+    void save(std::ofstream& fout,vector<Pose>& pose);
     void pose_2d_to_3d(cv::Mat& color, cv::Mat &depth, vector<Pose>& pose_2d);
     void pixel_to_camera(vector<Pose>& pose);
-    void camera_to_world(vector<Pose>& pose);
+    
     void waitforKinectPose();
     void human_keypoints_callback(const human_pose_msgs::HumanList keypoints);
     // void human_boundbox_callback(const openpose_ros_msgs::BoundingBox& bboxs);
     void showOpenPosePoints(cv::Mat& image, vector<Pose>& pose2d);
-    void sendPoseToRviz(vector<Pose>& pose_3d);
+    
 
 private:
-    vector<Pose> pose;
-
+    
     std::mutex lock;
-
+    int camera_index;
+    int person_num;
     const bool useExact, useCompressed;
     bool calib_start, running, updateColor, updateDepth, updatePose;
+    ros::NodeHandle nh;
+    ros::AsyncSpinner spinner;  //话题接收线程
     
-    int camera_index;
-    std::string ns = K2_DEFAULT_NS;
     int queueSize;
+    image_transport::ImageTransport it;
+    vector<Pose> pose;
+    std::string ns = K2_DEFAULT_NS;
     std::string topicColor, topicDepth;
     cv::Mat color, depth;
     cv::Mat cameraMatrixColor, cameraMatrixDepth;
@@ -116,11 +114,11 @@ private:
     typedef message_filters::sync_policies::ExactTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::CameraInfo, sensor_msgs::CameraInfo> ExactSyncPolicy;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::CameraInfo, sensor_msgs::CameraInfo> ApproximateSyncPolicy;
 
-    ros::NodeHandle nh;
+    
     ros::Publisher cloud_pub;
     ros::Subscriber human_keypoints_sub;
-    ros::AsyncSpinner spinner;  //话题接收线程
-    image_transport::ImageTransport it;
+    
+   
     image_transport::SubscriberFilter *subImageColor, *subImageDepth;
     message_filters::Subscriber<sensor_msgs::CameraInfo> *subCameraInfoColor, *subCameraInfoDepth;
     message_filters::Subscriber<human_pose_msgs::HumanList> *subHumanPoseInfo;

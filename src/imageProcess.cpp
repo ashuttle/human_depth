@@ -1,4 +1,5 @@
 #include "human_depth/imageProcess.h"
+#include <fstream>
 // 参数:
 //   相机的ID
 //   图像的话题（ros图像的路径）
@@ -6,15 +7,15 @@
 ImageProcess::ImageProcess(int camera_index, std::string &topicColor, std::string &topicDepth, const bool useExact, const bool useCompressed)
 :camera_index(camera_index),
  useExact(useExact), useCompressed(useCompressed),
- calib_start(false), running(false), updateColor(false), updateDepth(false), updatePose(false),
- nh("~"), spinner(4), queueSize(1), it(nh), mode(CLOUD)
+ running(false), updateColor(false), updateDepth(false), updatePose(false),
+ nh("~"), spinner(4), queueSize(10), it(nh), mode(IMAGE)
 {
     cameraMatrixColor = cv::Mat::zeros(3, 3, CV_64F);
     cameraMatrixDepth = cv::Mat::zeros(3, 3, CV_64F);
     distCoeffs = cv::Mat::zeros(1, 5, CV_64F);
     camera_rot = Eigen::Matrix3d::Zero();
     camera_trans = Eigen::Matrix<double, 3, 1>::Zero();
-
+    
     this->topicColor = "/" + ns + "_" + to_string(this->camera_index) + topicColor;
     this->topicDepth = "/" + ns + "_" + to_string(this->camera_index) + topicDepth;
     OUT_INFO("topic color: " FG_CYAN << this->topicColor << NO_COLOR);
@@ -34,30 +35,26 @@ void ImageProcess::start(const Mode mode)
     this->mode = mode;
     running = true;
 
-    std::string topicCameraInfoColor = topicColor.substr(0, topicColor.rfind('/')) + "/camera_info"; //完整图片的话题路径
+    std::string topicCameraInfoColor = topicColor.substr(0, topicColor.rfind('/')) + "/camera_info"; //camera_info//完整图片的话题路径
     std::string topicCameraInfoDepth = topicDepth.substr(0, topicDepth.rfind('/')) + "/camera_info"; //完整深度图片的话题路径
-
-
+    OUT_INFO("topic colorinfo: " FG_CYAN << topicCameraInfoColor << NO_COLOR);
+    OUT_INFO("topic depthinfo: " FG_CYAN << topicCameraInfoDepth << NO_COLOR);
     std::string humanPoseInfoTopic = "/openpose_ros/human_list_" + to_string(this->camera_index); //新建的一个，openpose关键点话题
-
+    OUT_INFO("human pose topic: " FG_CYAN << humanPoseInfoTopic << NO_COLOR);
     image_transport::TransportHints hints(useCompressed ? "compressed" : "raw");
     //订阅器 就是通过话题路径得到图像或深度图像的信息
     subImageColor = new image_transport::SubscriberFilter(it, topicColor, queueSize, hints);
     subImageDepth = new image_transport::SubscriberFilter(it, topicDepth, queueSize, hints);
-    // subHumanPoseInfo = new message_filters::subscriber<openpose_ros_msgs::OpenPoseHumanList>(nh, humanPoseInfoTopic, queueSize); 
     
     // 两个相机的订阅器 分别得到深度相机和彩色相机的内参和外参
     subCameraInfoColor = new message_filters::Subscriber<sensor_msgs::CameraInfo>(nh, topicCameraInfoColor, queueSize);
     subCameraInfoDepth = new message_filters::Subscriber<sensor_msgs::CameraInfo>(nh, topicCameraInfoDepth, queueSize);
     
-    // message_filters::Subscriber<openpose_ros_msgs::OpenPoseHumanList> sub_pose(nh, humanPoseInfoTopic, queueSize, ros::TransportHints().tcpNoDelay());
-    
     // 订阅器。 queueSize队列的大小（监听的次数）保存回调函数最近几次的结果， 回调函数 （通过human_keypoints_callback不断来（监听）接受openpose发布的数据（关节点信息））
     // this 自带的指针
     human_keypoints_sub = nh.subscribe(humanPoseInfoTopic, queueSize, &ImageProcess::human_keypoints_callback, this);
    
-    //cloud_pub = nh.advertise<pcl::PCLPointCloud2>("human_cloud", 1);
-// 同步RGB相机和深度相机的数据
+    // 同步RGB相机和深度相机的数据
     if(useExact)
     {
       syncExact = new message_filters::Synchronizer<ExactSyncPolicy>(ExactSyncPolicy(queueSize), *subImageColor, *subImageDepth, *subCameraInfoColor, *subCameraInfoDepth);
@@ -68,15 +65,13 @@ void ImageProcess::start(const Mode mode)
       syncApproximate = new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(queueSize), *subImageColor, *subImageDepth, *subCameraInfoColor, *subCameraInfoDepth);
       syncApproximate->registerCallback(boost::bind(&ImageProcess::callback, this, _1, _2, _3, _4));
     }
-    OUT_INFO("starting1...");;
-// 开始多线程
+    // 开始多线程
     spinner.start();
-    // 
-    // waitforKinectPose();
-    OUT_INFO("starting2...");;
+
     std::chrono::milliseconds duration(1);
     // 等到ros准备好就继续 当RGB和深度图相机不敢坐就结束
-    OUT_INFO("starting3...");;
+    // OUT_INFO("r1");
+    
     while(!updateColor || !updateDepth)
     {
         if(!ros::ok())
@@ -84,36 +79,10 @@ void ImageProcess::start(const Mode mode)
             OUT_INFO("ros !ok...");; 
             return;
         }
-        std::this_thread::sleep_for(duration);
     }
-    OUT_INFO("starting4...");; 
-// 新建 一个对象点云 cloud ptr是动态指针 新new一个对象
-    cloud = pcl::PointCloud<pcl::PointXYZRGBA>::Ptr(new pcl::PointCloud<pcl::PointXYZRGBA>());
 
-    cloud->height = color.rows;
-    cloud->width = color.cols;
-    cloud->is_dense = false; //稀疏点云和稠密点云
-    cloud->points.resize(cloud->height * cloud->width);
-    // 设置点云范围 他的大小是RGB图像的大小
-    createLookup(this->color.cols, this->color.rows);
-
-    // 可视化
-    switch (mode)
-    {
-    case IMAGE:
-        imageViewer();
-        break;
-    case CLOUD:
-        cloudViewer();
-        break;
-    case BOTH:
-        imageViewerThread = std::thread(&ImageProcess::imageViewer, this); //开启图像显示线程
-        cloudViewer();
-        break;
-    default:
-        ROS_INFO("Shit!..");
-        break;
-    }
+    imageViewer();
+ 
 }
 
 void ImageProcess::stop()
@@ -134,34 +103,33 @@ void ImageProcess::stop()
     delete subCameraInfoDepth;
     delete subHumanPoseInfo;
 
-    if(mode == BOTH){
-        imageViewerThread.join();
-    }
 }
-// 相机图像和内外参的callback
+// 相机图像和内参的callback
 void ImageProcess::callback(const sensor_msgs::Image::ConstPtr imageColor, const sensor_msgs::Image::ConstPtr imageDepth,
                             const sensor_msgs::CameraInfo::ConstPtr cameraInfoColor, const sensor_msgs::CameraInfo::ConstPtr cameraInfoDepth
                             )
 {
     cv::Mat color, depth;
-    //vector<Pose> pose;
-
+    
+    // cout << "1"  << endl;
     readCameraInfo(cameraInfoColor, cameraMatrixColor);
     readCameraInfo(cameraInfoDepth, cameraMatrixDepth);
+    // cout << "2"  << endl;
     readImage(imageColor, color);
     readImage(imageDepth, depth);
-    // IR image input
+    // cout << "3"  << endl;
+
     if(color.type() == CV_16U)
     {
       cv::Mat tmp;
       color.convertTo(tmp, CV_8U, 0.02);
       cv::cvtColor(tmp, color, CV_GRAY2BGR);
     }
-
+  
     lock.lock();
     this->color = color;
     this->depth = depth;
-    // this->pose = pose;
+
     updateColor = true;
     updateDepth = true;
     lock.unlock();
@@ -171,37 +139,42 @@ void ImageProcess::callback(const sensor_msgs::Image::ConstPtr imageColor, const
 void ImageProcess::imageViewer()
 {
     cv::Mat color, depth, depthDisp, combined;
-    //vector<Pose> pose;
+    // vector<Pose> pose;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, now; //计时
     double fps = 0;//帧数
     size_t frameCount = 0;
     std::ostringstream oss; //字符流
-    const cv::Point pos(5, 15);
+    const cv::Point pos(5, 18);
     const cv::Scalar colorText = CV_RGB(255, 255, 255);
     const double sizeText = 0.5;
     const int lineText = 1;
     const int font = cv::FONT_HERSHEY_SIMPLEX;
-
+    std::ofstream fout;
     ros::Rate rate(30); //延时  代码的频率
-
+    
+    
+    // cout << "1"  << endl;
     cv::namedWindow("Image Viewer");
     cv::namedWindow("Depth Viewer");
     oss << "starting...";
 
+    string data_path = "xxx";
+
     start = std::chrono::high_resolution_clock::now();
     for(; running && ros::ok();)
     {
+
         if(updateColor)
         {
             // 临时变量
             lock.lock();
             color = this->color;
             depth = this->depth;
-            pose = this->pose;
+            // pose = this->pose; //3.1
             updateColor = false;
             lock.unlock();
-// 统计帧数
+            // 统计帧数
             ++frameCount;
             now = std::chrono::high_resolution_clock::now();
             // 统计时间
@@ -218,354 +191,85 @@ void ImageProcess::imageViewer()
             //cv::resize(color, color, cv::Size(960, 540));
             // 显示深度图
             dispDepthImage(depth, depthDisp, 12000.0f);
-            //combine(color, depthDisp, combined);
-           
-
-            pose_2d_to_3d(color, depth, pose); //12.29
-            // sendPoseToRviz(pose); //12.29
-             // 显示关节点
+            // combine(color, depthDisp, combined);
+           // 显示关节点
             showOpenPosePoints(color, pose);
-
+            
+            pose_2d_to_3d(color, depth, pose); //12.29
+            //保存关节点
+            save(fout,pose);
+            
             // 在图像上绘制关节点
             cv::putText(color, oss.str(), pos, font, sizeText, colorText, lineText);
             cv::imshow("Image Viewer", color);
             cv::imshow("Depth Viewer", depthDisp);
             cv::waitKey(3);
         }
-
+        
         ros::spinOnce(); //标准程序
         rate.sleep(); 
     }
     cv::destroyAllWindows();
     cv::waitKey(100);
 }
-// 显示点云信息 点云空间
-void ImageProcess::cloudViewer()
-{
-    cv::Mat color, depth;
-    vector<Pose> pose;
-    pcl::visualization::PCLVisualizer::Ptr visualizer(new pcl::visualization::PCLVisualizer("Cloud Viewer"));
-    const std::string cloudName = "rendered";
-
-    lock.lock();
-    color = this->color;
-    depth = this->depth;
-    pose = this->pose;
-    updateDepth = false;
-    lock.unlock();
-
-    //createHumanCloud(depth, color, pose, cloud);
-    createCloud(depth, color, cloud);
-    //createXYZCloud(depth, color, xyz_cloud);
-
-    visualizer->addPointCloud(cloud, cloudName);
-    visualizer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, cloudName);
-    visualizer->initCameraParameters();
-    visualizer->setBackgroundColor(0, 0, 0);
-    visualizer->setPosition(mode == BOTH ? color.cols : 0, 0);
-    visualizer->setSize(color.cols, color.rows);
-    visualizer->setShowFPS(true);
-    visualizer->setCameraPosition(0, 0, 0, 0, -1, 0);
-    //visualizer->registerKeyboardCallback(&Receiver::keyboardEvent, *this);
-
-    for(; running && ros::ok();)
-    {
-        if(updateDepth)
-        {
-            lock.lock();
-            color = this->color;
-            depth = this->depth;
-            updateDepth = false;
-            lock.unlock();
-
-            //createHumanCloud(depth, color, pose, cloud);
-            createCloud(depth, color, cloud);
-            //createXYZCloud(depth, color, xyz_cloud);
-            //pubCloud(xyz_cloud);
-            visualizer->updatePointCloud(cloud, cloudName);
-        }
-        visualizer->spinOnce(10);
-    }
-    visualizer->close();
-}
-// 在callback里读取
-void ImageProcess::readImage(const sensor_msgs::Image::ConstPtr msgImage, cv::Mat &image) const
-{
-    cv_bridge::CvImageConstPtr pCvImage;
-    pCvImage = cv_bridge::toCvShare(msgImage, msgImage->encoding);
-    pCvImage->image.copyTo(image);
-}
-// 在callback里读取相机参数
-void ImageProcess::readCameraInfo(const sensor_msgs::CameraInfo::ConstPtr cameraInfo, cv::Mat &cameraMatrix) const
-{
-    double *itC = cameraMatrix.ptr<double>(0, 0);
-    for(size_t i = 0; i < 9; ++i, ++itC)
-    {
-      *itC = cameraInfo->K[i];
-    }
-}
-// 显示深度图
-void ImageProcess::dispDepthImage(cv::Mat& input, cv::Mat& output, const float maxValue)
-{
-    cv::Mat tmp = cv::Mat(input.rows, input.cols, CV_8U);
-    const uint32_t maxInt = 255;
-
-    for(int r = 0; r < input.rows; ++r)
-    {
-        const uint16_t *itI = input.ptr<uint16_t>(r);
-        uint8_t *itO = tmp.ptr<uint8_t>(r);
-
-        for(int c = 0; c < input.cols; ++c, ++itI, ++itO)
-        {
-            *itO = (uint8_t)std::min((*itI * maxInt / maxValue), 255.0f);
-        }
-    }
-
-    cv::applyColorMap(tmp, output, cv::COLORMAP_JET);
-}
-// 没有用到
-void ImageProcess::createLookup(size_t width, size_t height)
-{
-    const float fx = 1.0f / cameraMatrixColor.at<double>(0, 0);
-    const float fy = 1.0f / cameraMatrixColor.at<double>(1, 1);
-    const float cx = cameraMatrixColor.at<double>(0, 2);
-    const float cy = cameraMatrixColor.at<double>(1, 2);
-    float *it;
-
-    lookupY = cv::Mat(1, height, CV_32F);
-    it = lookupY.ptr<float>();
-    for(size_t r = 0; r < height; ++r, ++it)
-    {
-      *it = (r - cy) * fy;
-    }
-
-    lookupX = cv::Mat(1, width, CV_32F);
-    it = lookupX.ptr<float>();
-    for(size_t c = 0; c < width; ++c, ++it)
-    {
-      *it = (c - cx) * fx;
-    }
-}
-//发布点云
-void ImageProcess::pubCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input) const
-{
-    // pcl::PCLPointCloud2 output;
-    // //pcl::PointCloud<pcl::PointXYZ>::Ptr cloudPoint(new pcl::PointCloud<pcl::PointXYZ>);
-
-    // // pcl::fromPCLPointCloud2(*input, output)
-    // // //pcl::PointCloud<pcl::PointXYZRGBA> cloud;
-    // // //cloud = *input;
-    // output = *input;
-
-    // cloud_pub.publish(output);
-}
-
-//cloudViewer中引用 创建一个点云图（利用深度信息和RGB）
-void ImageProcess::createCloud(const cv::Mat &depth, const cv::Mat &color, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud) const
-{
-    const float badPoint = std::numeric_limits<float>::quiet_NaN();
-
-    for(int r = 0; r < depth.rows; ++r)
-    {
-        pcl::PointXYZRGBA *itP = &cloud->points[r * depth.cols];
-        const uint16_t *itD = depth.ptr<uint16_t>(r);
-        const cv::Vec3b *itC = color.ptr<cv::Vec3b>(r);
-        const float y = lookupY.at<float>(0, r);
-        const float *itX = lookupX.ptr<float>();
-
-        for(size_t c = 0; c < (size_t)depth.cols; ++c, ++itP, ++itD, ++itC, ++itX)
-        {
-            register const float depthValue = *itD / 1000.0f;
-            // Check for invalid measurements
-            if(*itD == 0)
-            {
-                // not valid
-                itP->x = itP->y = itP->z = badPoint;
-                itP->rgba = 0;
-                continue;
-            }
-            itP->z = depthValue;
-            itP->x = *itX * depthValue;
-            itP->y = y * depthValue;
-            if(itP->z < 2.2){
-                itP->b = 0;
-                itP->g = 255;
-                itP->r = 0;
-            }else{
-                itP->b = itC->val[0];
-                itP->g = itC->val[1];
-                itP->r = itC->val[2];
-            }
-            itP->a = 255;
-        }
-    }
-}
-// 没用
-void ImageProcess::createHumanCloud(cv::Mat &depth, cv::Mat &color, vector<Pose>& pose, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
-{
-    if(pose.empty()) return;
-
-    for(int i=0; i<pose.size(); ++i){
-        for(int j=0;j<pose[i].pose_joints.size(); ++j){
-            createJointCloud(depth, color, pose[i].pose_joints[j], cloud);
-        }
-    }
+void ImageProcess::save(std::ofstream& fout,vector<Pose>& pose){
+    fout.open("/home/xuchengjun/catkin_ws/src/human_depth/data.txt",std::ios::app);
     
-}
-
-void ImageProcess::createJointCloud(cv::Mat &depth, cv::Mat &color, KeyPoint_prob& joint, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
-{
-    const float badPoint = std::numeric_limits<float>::quiet_NaN();
-    const int D = 5;
-
-    for(int r = joint.y - D; r < joint.y + D; ++r)
-    {
-        pcl::PointXYZRGBA *itP = &cloud->points[2*D];
-        const uint16_t *itD = depth.ptr<uint16_t>(r);
-        const cv::Vec3b *itC = color.ptr<cv::Vec3b>(r);
-        const float y = lookupY.at<float>(joint.y - D,r);
-        const float *itX = lookupX.ptr<float>();
-
-        for(size_t c = joint.x - D; c < joint.x + D; ++c, ++itP, ++itD, ++itC, ++itX)
-        {
-            register const float depthValue = *itD / 1000.0f;
-            // Check for invalid measurements
-            if(*itD == 0)
-            {
-                // not valid
-                itP->x = itP->y = itP->z = badPoint;
-                continue;
+    if(!fout.is_open()){
+       std::cout<<"打开文件失败！！\n";
+       return;
+   }
+    if(!pose.empty()){
+        for(int i=0; i<pose.size(); ++i){
+            for(int j=0; j<pose[i].pose_joints.size(); ++j){
+                fout << pose[i].pose_joints[j].x << " "<< pose[i].pose_joints[j].y << " "<< pose[i].pose_joints[j].z <<" ";
             }
-            itP->z = depthValue;
-            itP->x = *itX * depthValue;
-            itP->y = y * depthValue;
-            itP->b = itC->val[0];
-            itP->g = itC->val[1];
-            itP->r = itC->val[2];
-            itP->a = 255;
+        fout << endl;
         }
     }
-}
-
-
-// 没用
-void ImageProcess::keyboardEvent(const pcl::visualization::KeyboardEvent &event, void *)
-{
-    if(event.keyUp()){
-        switch (event.getKeyCode())
-        {
-        case ' ':
-            calib_start = true;
-            break;
-        
-        default:
-            ROS_INFO("Please enter space to calibration!");
-            break;
-        }
-    }
-}
-// 监听相机的外参 
-void ImageProcess::waitforKinectPose()
-{
-    geometry_msgs::TransformStamped transform;
-    tf2_ros::Buffer tf_Buffer;
-    tf2_ros::TransformListener tf_listener(tf_Buffer);
-    std::string camera_id = "camera_base_" + to_string(camera_index);
-
-    while(ros::ok()){
-    try
-    {
-        transform = tf_Buffer.lookupTransform("marker_0", camera_id, ros::Time(0));
-    }
-    catch(tf2::TransformException& ex)
-    {
-        ROS_WARN("%s", ex.what());
-        ros::Duration(1.0).sleep();
-        continue;
-    }
-    Eigen::Quaterniond q(transform.transform.rotation.w,
-                         transform.transform.rotation.x,
-                         transform.transform.rotation.y,
-                         transform.transform.rotation.z);
-    Eigen::Vector3d trans(transform.transform.translation.x,
-                          transform.transform.translation.y,
-                          transform.transform.translation.z);
-        
-        this->camera_rot = q.toRotationMatrix();
-        this->camera_trans = trans;
-        ROS_INFO("camera_%d pose load successfully!", this->camera_index);
-        break;
-    } 
-    //delete tf_Buffer;
+    // if(updatePose){
+    //     fout << endl;
+    //     updatePose=false;
+    // }
+    fout.close();
 }
 // 转换成pose类的 关节点的格式
 void ImageProcess::human_keypoints_callback(const human_pose_msgs::HumanList keypoints)
 {
-    //updatePose = true;
+    updatePose = true;
     pose.clear();
-    int person_num = keypoints.human_list.size();
+    person_num=0;
+    person_num = keypoints.human_list.size();
+    // cout << person_num << endl;
 
     if(person_num>0){
-        for(int person=0; person < person_num; ++person){
-            auto body_keypoints = keypoints.human_list[person].body_key_points_prob;
+        for(int per=0; per< person_num; ++per){
+            auto body_keypoints = keypoints.human_list[per].body_key_points_prob;
             //去掉假的人
-			int count = 0;
+            int count=0;
 			double prob_sum = 0.0;
-			for(int i=0;i < body_keypoints.size();i++)
+			for(int i=0;i < body_keypoints.size();++i)
 			{
-				if(body_keypoints[i].p > 0.0)
-				{
-					prob_sum += body_keypoints[i].p;
-					count++;
-				}
+				prob_sum += body_keypoints[i].p;
+                count++;
 			}
+            // cout << i << endl;
 			double prob_eval = prob_sum/count;
 
-			if(prob_eval < 0.1) //原来是0.4
+			if(prob_eval < 0.4) //原来是0.4
 			{
 				continue;
 			}
 
             Pose pose_new;
-            
+            // cout << pose_new << endl;
             pose_new.setCameraId(camera_index);
-            pose_new.setPose(keypoints, keypoints.human_list[person].human_id);
-            pose.emplace_back(pose_new);
-            
+            pose_new.setPose(keypoints, per);
+            pose.push_back(pose_new); 
         }
     }
 }
 
-// void ImageProcess::human_boundbox_callback(const human_pose_msgs::BoundingBox& bboxs)
-// {
-//     // int person_num = bboxs.num_humans;
-
-//     // auto body_bbox = bboxs.x;
-// }
-
-// 相机坐标系到世界坐标系
-void ImageProcess::camera_to_world(vector<Pose>& pose)
-{
-    Eigen::Matrix<double, 3, 1> camera_point;
-    Eigen::Matrix<double, 3, 1> world_point;
-
-    for(int i=0; i<pose.size(); ++i){
-        for(int j=0; j<pose[i].pose_joints.size(); ++j){
-            camera_point(0,0) = pose[i].pose_joints[j].x;
-            camera_point(1,0) = pose[i].pose_joints[j].y;
-            camera_point(2,0) = pose[i].pose_joints[j].z;
-
-            world_point = camera_rot.cast<double>() * camera_point + camera_trans.cast<double>();
-
-            pose[i].pose_joints[j].x = world_point(0,0);
-            pose[i].pose_joints[j].y = world_point(1,0);
-            pose[i].pose_joints[j].z = world_point(2,0);
-            // cout << "world: " << pose[i].pose_joints[j].x << "  " << pose[i].pose_joints[j].y
-            // << "  " << pose[i].pose_joints[j].z << "\n";
-        }
-        //cout << endl;
-    }
-}
 // 根据像素点访问深度值
 void ImageProcess::getDepthValue(cv::Mat& image, KeyPoint_prob& joint)
 {
@@ -574,20 +278,41 @@ void ImageProcess::getDepthValue(cv::Mat& image, KeyPoint_prob& joint)
     float eta = 5.0;
     float count = 1.0;
     float sum = 0;
-
+    // std::ofstream fout;
+    // fout.open("/home/xuchengjun/catkin_ws/src/human_depth/data.txt",std::ios::app);
+    
+    // if(!fout.is_open()){
+    //    std::cout<<"打开文件失败！！\n";
+    //    return;
+    // }
+    // joint.y=618;
+    // joint.x =618;
+    
     for(auto i = joint.y - eta; i < joint.y + eta; ++i){
         for(auto j= joint.x - eta; j < joint.x + eta; ++j){
-            register const float depthValue = image.ptr<uint16_t>((int)i)[(int)j];
-            if(depthValue == 0){
-                //joint.x = joint.y = joint.z = badPoint;
-                continue;
+            float deValue=0;
+            if(i < 0 || i >= image.rows || j < 0  || j >= image.cols){
+               deValue=0;
+               //cout<<image.cols<<image.rows; //输出：1920 1080
             }
-            sum += depthValue;
+            else{
+                register const float depthValue = image.ptr<uint16_t>((int)i)[(int)j];
+                deValue = depthValue;
+            }
+            
+            // if(depthValue == 0){
+            //     //joint.x = joint.y = joint.z = badPoint;
+            //     continue;
+            // }
+            sum += deValue;
             count++;
         }
     }
 
     joint.z = sum / count / 1000.0;
+    // fout << image.ptr<uint16_t>((int)618)[(int)618]/1000.0 <<" ";
+    
+    // fout.close();
     //cout << "sum  " << sum << "  " << "count  " << count << endl;
     //return joint;
 }
@@ -622,7 +347,7 @@ void ImageProcess::pose_2d_to_3d(cv::Mat& color, cv::Mat &depth, vector<Pose>& p
 {
     if(pose_2d.empty()) return;
 
-    float *it;
+
     for(int i=0; i<pose_2d.size(); ++i){
         for(int j=0; j<pose_2d[i].pose_joints.size(); ++j){
 
@@ -639,12 +364,14 @@ void ImageProcess::pose_2d_to_3d(cv::Mat& color, cv::Mat &depth, vector<Pose>& p
             
         }
 
-        cout << endl;
+        // cout << endl;
     }
     pixel_to_camera(pose_2d);
+
 }
 
 // 显示
+
 void ImageProcess::showOpenPosePoints(cv::Mat& image, vector<Pose>& pose2d)
 {
     if(pose2d.empty()) return;
@@ -655,65 +382,46 @@ void ImageProcess::showOpenPosePoints(cv::Mat& image, vector<Pose>& pose2d)
                 continue;
             }
 
-            cv::circle(image, cv::Point2d(pose2d[i].pose_joints[j].x, pose2d[i].pose_joints[j].y), 5, cv::Scalar(255,0,0), 3);
+            cv::circle(image, cv::Point2d(pose2d[i].pose_joints[j].x, pose2d[i].pose_joints[j].y), 4, cv::Scalar(0,255,0), -1);
             std::ostringstream oss;
             oss << pose[i].pose_joints[j].p;
-            putText(image, oss.str(), cv::Point(pose2d[i].pose_joints[j].x+20, pose2d[i].pose_joints[j].y), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0,255,0), 1);
+            // putText(image, oss.str(), cv::Point(pose2d[i].pose_joints[j].x+20, pose2d[i].pose_joints[j].y), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0,255,0), 1);
         }
     }
 }
-// 发送3D关节点到ros
-void ImageProcess::sendPoseToRviz(vector<Pose>& pose_3d)
+
+// 在callback里读取
+void ImageProcess::readImage(const sensor_msgs::Image::ConstPtr msgImage, cv::Mat &image) const
 {
-    pixel_to_camera(pose_3d);
-    //camera_to_world(pose_3d);
-
-    static tf2_ros::TransformBroadcaster br;
-    geometry_msgs::TransformStamped transformStamped;
-
-
-    transformStamped.header.stamp = ros::Time::now();
-    transformStamped.header.frame_id = "marker_0";
-    transformStamped.child_frame_id = "head";
-    tf2::Quaternion q;
-    q.setRPY(0,0,0);
-
-    if(pose_3d[0].pose_joints[1].x != 0 && pose_3d[0].pose_joints[1].y != 0 && pose_3d[0].pose_joints[1].z != 0){
-        transformStamped.transform.translation.x = pose_3d[0].pose_joints[1].x;
-        transformStamped.transform.translation.y = pose_3d[0].pose_joints[1].y;
-        transformStamped.transform.translation.z = pose_3d[0].pose_joints[1].z;
+    cv_bridge::CvImageConstPtr pCvImage;
+    pCvImage = cv_bridge::toCvShare(msgImage, msgImage->encoding);
+    pCvImage->image.copyTo(image);
+}
+// 在callback里读取相机参数
+void ImageProcess::readCameraInfo(const sensor_msgs::CameraInfo::ConstPtr cameraInfo, cv::Mat &cameraMatrix) const
+{
+    double *itC = cameraMatrix.ptr<double>(0, 0);
+    for(size_t i = 0; i < 9; ++i, ++itC)
+    {
+      *itC = cameraInfo->K[i];
     }
-    
-    transformStamped.transform.rotation.x = q.x();
-    transformStamped.transform.rotation.y = q.y();
-    transformStamped.transform.rotation.z = q.z();
-    transformStamped.transform.rotation.w = q.w();
+}
+// 显示深度图
+void ImageProcess::dispDepthImage(cv::Mat& input, cv::Mat& output, const float maxValue)
+{
+    cv::Mat tmp = cv::Mat(input.rows, input.cols, CV_8U);
+    const uint32_t maxInt = 255;
 
-    //br.sendTransform(transformStamped);
+    for(int r = 0; r < input.rows; ++r)
+    {
+        const uint16_t *itI = input.ptr<uint16_t>(r);
+        uint8_t *itO = tmp.ptr<uint8_t>(r);
 
-    // for(int i=0; i<pose_3d.size(); ++i){
-    //     pose_3d[i].setJointName();
-    //     for(int j=0; j<pose_3d[i].pose_joints.size(); ++j){
-    //         transformStamped.header.stamp = ros::Time::now();
-    //         transformStamped.header.frame_id = "marker_0";
-    //         transformStamped.child_frame_id = "head";
+        for(int c = 0; c < input.cols; ++c, ++itI, ++itO)
+        {
+            *itO = (uint8_t)std::min((*itI * maxInt / maxValue), 255.0f);
+        }
+    }
 
-    //         //if(pose_3d[i].pose_joints[j].x != 0 && pose_3d[i].pose_joints[j].x != 0 && pose_3d[i].pose_joints[j].x != 0){
-    //             transformStamped.transform.translation.x = pose_3d[i].pose_joints[j].x;
-    //             transformStamped.transform.translation.y = pose_3d[i].pose_joints[j].y;
-    //             transformStamped.transform.translation.z = pose_3d[i].pose_joints[j].z;
-    //         //}
-            
-    //         transformStamped.transform.rotation.x = q.x();
-    //         transformStamped.transform.rotation.y = q.y();
-    //         transformStamped.transform.rotation.z = q.z();
-    //         transformStamped.transform.rotation.w = q.w();
-
-    //         br.sendTransform(transformStamped);
-    //     }
-    // }
-
-    // for(auto it=pose_3d[0].joint_name.begin(); it!=pose_3d[0].joint_name.end(); it++){
-    //     cout << *it << endl;
-    // }
+    cv::applyColorMap(tmp, output, cv::COLORMAP_JET);
 }

@@ -60,41 +60,41 @@ include CMakeFiles/human_depth_detected.dir/flags.make
 CMakeFiles/human_depth_detected.dir/src/main.cpp.o: CMakeFiles/human_depth_detected.dir/flags.make
 CMakeFiles/human_depth_detected.dir/src/main.cpp.o: ../src/main.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/human_depth_detected.dir/src/main.cpp.o"
-	/bin/x86_64-linux-gnu-g++-9  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/main.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp
+	/bin/x86_64-linux-gnu-g++-7  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/main.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp
 
 CMakeFiles/human_depth_detected.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/human_depth_detected.dir/src/main.cpp.i"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp > CMakeFiles/human_depth_detected.dir/src/main.cpp.i
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp > CMakeFiles/human_depth_detected.dir/src/main.cpp.i
 
 CMakeFiles/human_depth_detected.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/human_depth_detected.dir/src/main.cpp.s"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp -o CMakeFiles/human_depth_detected.dir/src/main.cpp.s
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/main.cpp -o CMakeFiles/human_depth_detected.dir/src/main.cpp.s
 
 CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.o: CMakeFiles/human_depth_detected.dir/flags.make
 CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.o: ../src/imageProcess.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.o"
-	/bin/x86_64-linux-gnu-g++-9  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp
+	/bin/x86_64-linux-gnu-g++-7  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp
 
 CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.i"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp > CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.i
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp > CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.i
 
 CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.s"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp -o CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.s
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/imageProcess.cpp -o CMakeFiles/human_depth_detected.dir/src/imageProcess.cpp.s
 
 CMakeFiles/human_depth_detected.dir/src/pose.cpp.o: CMakeFiles/human_depth_detected.dir/flags.make
 CMakeFiles/human_depth_detected.dir/src/pose.cpp.o: ../src/pose.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/human_depth_detected.dir/src/pose.cpp.o"
-	/bin/x86_64-linux-gnu-g++-9  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/pose.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp
+	/bin/x86_64-linux-gnu-g++-7  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/human_depth_detected.dir/src/pose.cpp.o -c /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp
 
 CMakeFiles/human_depth_detected.dir/src/pose.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/human_depth_detected.dir/src/pose.cpp.i"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp > CMakeFiles/human_depth_detected.dir/src/pose.cpp.i
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp > CMakeFiles/human_depth_detected.dir/src/pose.cpp.i
 
 CMakeFiles/human_depth_detected.dir/src/pose.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/human_depth_detected.dir/src/pose.cpp.s"
-	/bin/x86_64-linux-gnu-g++-9 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp -o CMakeFiles/human_depth_detected.dir/src/pose.cpp.s
+	/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/xuchengjun/catkin_ws/src/human_depth/src/pose.cpp -o CMakeFiles/human_depth_detected.dir/src/pose.cpp.s
 
 # Object files for target human_depth_detected
 human_depth_detected_OBJECTS = \

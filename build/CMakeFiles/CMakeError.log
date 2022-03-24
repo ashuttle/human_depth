@@ -1,21 +1,21 @@
 Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
 Change Dir: /home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_82fba/fast && /usr/bin/make -f CMakeFiles/cmTC_82fba.dir/build.make CMakeFiles/cmTC_82fba.dir/build
+Run Build Command(s):/usr/bin/make cmTC_b87af/fast && /usr/bin/make -f CMakeFiles/cmTC_b87af.dir/build.make CMakeFiles/cmTC_b87af.dir/build
 make[1]: Entering directory '/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_82fba.dir/src.c.o
-/bin/x86_64-linux-gnu-gcc-9   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_82fba.dir/src.c.o   -c /home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_82fba
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_82fba.dir/link.txt --verbose=1
-/bin/x86_64-linux-gnu-gcc-9  -DCMAKE_HAVE_LIBC_PTHREAD    -rdynamic CMakeFiles/cmTC_82fba.dir/src.c.o  -o cmTC_82fba 
-/usr/bin/ld: CMakeFiles/cmTC_82fba.dir/src.c.o: in function `main':
-src.c:(.text+0x46): undefined reference to `pthread_create'
-/usr/bin/ld: src.c:(.text+0x52): undefined reference to `pthread_detach'
-/usr/bin/ld: src.c:(.text+0x63): undefined reference to `pthread_join'
+Building C object CMakeFiles/cmTC_b87af.dir/src.c.o
+/bin/x86_64-linux-gnu-gcc-7   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_b87af.dir/src.c.o   -c /home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b87af
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b87af.dir/link.txt --verbose=1
+/bin/x86_64-linux-gnu-gcc-7  -DCMAKE_HAVE_LIBC_PTHREAD    -rdynamic CMakeFiles/cmTC_b87af.dir/src.c.o  -o cmTC_b87af 
+/usr/bin/ld: CMakeFiles/cmTC_b87af.dir/src.c.o: in function `main':
+src.c:(.text+0x3e): undefined reference to `pthread_create'
+/usr/bin/ld: src.c:(.text+0x4a): undefined reference to `pthread_detach'
+/usr/bin/ld: src.c:(.text+0x5b): undefined reference to `pthread_join'
 collect2: error: ld returned 1 exit status
-make[1]: *** [CMakeFiles/cmTC_82fba.dir/build.make:87: cmTC_82fba] Error 1
+make[1]: *** [CMakeFiles/cmTC_b87af.dir/build.make:87: cmTC_b87af] Error 1
 make[1]: Leaving directory '/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp'
-make: *** [Makefile:121: cmTC_82fba/fast] Error 2
+make: *** [Makefile:121: cmTC_b87af/fast] Error 2
 
 
 Source file was:
@@ -41,18 +41,18 @@ int main(void)
 Determining if the function pthread_create exists in the pthreads failed with the following output:
 Change Dir: /home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_afea4/fast && /usr/bin/make -f CMakeFiles/cmTC_afea4.dir/build.make CMakeFiles/cmTC_afea4.dir/build
+Run Build Command(s):/usr/bin/make cmTC_5dfdc/fast && /usr/bin/make -f CMakeFiles/cmTC_5dfdc.dir/build.make CMakeFiles/cmTC_5dfdc.dir/build
 make[1]: Entering directory '/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_afea4.dir/CheckFunctionExists.c.o
-/bin/x86_64-linux-gnu-gcc-9   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_afea4.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
-Linking C executable cmTC_afea4
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_afea4.dir/link.txt --verbose=1
-/bin/x86_64-linux-gnu-gcc-9  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_afea4.dir/CheckFunctionExists.c.o  -o cmTC_afea4  -lpthreads 
+Building C object CMakeFiles/cmTC_5dfdc.dir/CheckFunctionExists.c.o
+/bin/x86_64-linux-gnu-gcc-7   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_5dfdc.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_5dfdc
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5dfdc.dir/link.txt --verbose=1
+/bin/x86_64-linux-gnu-gcc-7  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_5dfdc.dir/CheckFunctionExists.c.o  -o cmTC_5dfdc  -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-make[1]: *** [CMakeFiles/cmTC_afea4.dir/build.make:87: cmTC_afea4] Error 1
+make[1]: *** [CMakeFiles/cmTC_5dfdc.dir/build.make:87: cmTC_5dfdc] Error 1
 make[1]: Leaving directory '/home/xuchengjun/catkin_ws/src/human_depth/build/CMakeFiles/CMakeTmp'
-make: *** [Makefile:121: cmTC_afea4/fast] Error 2
+make: *** [Makefile:121: cmTC_5dfdc/fast] Error 2
 
 
 

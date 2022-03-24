@@ -8,7 +8,7 @@
 
 # modified environment variables
 export CMAKE_PREFIX_PATH="/home/xuchengjun/catkin_ws/src/human_depth/build/devel:$CMAKE_PREFIX_PATH"
-export LD_LIBRARY_PATH='/home/xuchengjun/catkin_ws/src/human_depth/build/devel/lib:/home/xuchengjun/catkin_ws/devel/lib:/opt/ros/noetic/lib:/usr/local/cuda-11.2/lib64'
+export LD_LIBRARY_PATH='/home/xuchengjun/catkin_ws/src/human_depth/build/devel/lib:/home/xuchengjun/catkin_ws/devel/lib:/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/usr/local/cuda-11.2/lib64'
 export PATH="/opt/ros/noetic/bin:$PATH"
 export PKG_CONFIG_PATH="/home/xuchengjun/catkin_ws/src/human_depth/build/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
 export ROS_PACKAGE_PATH="/home/xuchengjun/catkin_ws/src/human_depth:$ROS_PACKAGE_PATH"
